@@ -1,0 +1,4 @@
+config = {
+    MEMBERSHIP_TYPE: 1,  # XBOX: 1, PS: 2
+    REQUEST_HEADERS: {'X-API-Key': ''}
+}
