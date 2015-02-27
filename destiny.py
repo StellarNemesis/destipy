@@ -1,33 +1,52 @@
 import requests
 from config import config
+from pprint import pprint
 
 
 class DestinyAPI(object):
 
-    def __init__(self):
+    def __init__(self, platform, username):
         self.API_URL = 'https://www.bungie.net/Platform/Destiny'
         self.REQUEST_HEADERS = config['REQUEST_HEADERS']
+        self.PLATFORM = platform
+        self.USERNAME = username
+        self.membership_id()
 
     def _request(self, query):
         req = requests.get(self.API_URL+query, headers=self.REQUEST_HEADERS)
         return req.json()
 
-    def get_membership_id_by_display_name(self, membership_type, display_name):
-        query = '/%d/Stats/GetMembershipIdByDisplayName/%s' % (membership_type,
-                                                               display_name)
+    def membership_id(self):
+        query = '/%d/Stats/GetMembershipIdByDisplayName/%s' % (self.PLATFORM,
+                                                               self.USERNAME)
         data = self._request(query)
-        return data['Response']
+        self.MEMBERSHIP_ID = data['Response']
 
-    def get_account_info(self, membership_type, membership_id):
-        query = '/%d/Account/%s/' % (membership_type, membership_id)
+    @property
+    def account_info(self):
+        query = '/%d/Account/%s/' % (self.PLATFORM, self.MEMBERSHIP_ID)
+        data = self._request(query)
+        return data
+
+
+class DestinyCharacter(object):
+
+    def __init__(self, api, character_id):
+        self.api = api
+        self.CHARACTER_ID = character_id
+
+    @property
+    def activity_info(self):
+        query = '/%d/Account/%s/Character/%s/Activities/' % (self.api.PLATFORM,
+                                                             self.api.MEMBERSHIP_ID,
+                                                             self.CHARACTER_ID)
         data = self._request(query)
         return data
 
 if __name__ == '__main__':
-    api = DestinyAPI()
-    membership_type = 1  # XBOX: 1, PS: 2
-    membership_id = api.get_membership_id_by_display_name(membership_type,
-                                                          'ermff')
-    print("MEMBERSHIP ID: %s" % membership_id)
-    account_info = api.get_account_info(membership_type, membership_id)
-    print("ACCOUNT INFO: %s" % account_info)
+    platform = 1  # XBOX: 1, PS: 2
+    username = 'ermff'
+    api = DestinyAPI(platform, username)
+    characters = api.account_info['Response']['data']['characters']
+    print(characters)
+
