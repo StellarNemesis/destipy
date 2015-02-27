@@ -49,4 +49,3 @@ if __name__ == '__main__':
     api = DestinyAPI(platform, username)
     characters = api.account_info['Response']['data']['characters']
     print(characters)
-
