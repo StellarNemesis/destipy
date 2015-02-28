@@ -10,28 +10,27 @@ class DestinyAPI(object):
         self.REQUEST_HEADERS = config['REQUEST_HEADERS']
         self.PLATFORM = platform
         self.USERNAME = username
-        self.membership_id()
-        self.characters()
+        self._membership_id()
+        self._account_info()
+        self._characters()
 
-    def _request(self, qry):
+    def api_request(self, qry):
         req = requests.get(self.API_URL+qry, headers=self.REQUEST_HEADERS)
         return req.json()
 
-    def membership_id(self):
+    def _membership_id(self):
         qry = '/%d/Stats/GetMembershipIdByDisplayName/%s' % (self.PLATFORM,
                                                              self.USERNAME)
-        data = self._request(qry)
+        data = self.api_request(qry)
         self.MEMBERSHIP = data['Response']  # will return 0 if invalid
 
-    def characters(self):
-        _characters = self.account_info['Response']['data']['characters']
-        self.CHARACTERS = [DestinyCharacter(self, i) for i in _characters]
-
-    @property
-    def account_info(self):
+    def _account_info(self):
         qry = '/%d/Account/%s/' % (self.PLATFORM, self.MEMBERSHIP)
-        data = self._request(qry)
-        return data
+        self.ACCOUNT_INFO = self.api_request(qry)
+
+    def _characters(self):
+        _characters = self.ACCOUNT_INFO['Response']['data']['characters']
+        self.CHARACTERS = [DestinyCharacter(self, i) for i in _characters]
 
 
 class DestinyCharacter(object):
@@ -47,7 +46,7 @@ class DestinyCharacter(object):
         qry = '/%d/Account/%s/Character/%s/Activities/'
         qry = qry % (self.API.PLATFORM, self.API.MEMBERSHIP,
                      self.CHARACTER_INFO['characterBase']['characterId'])
-        self.ACTIVITY_INFO = self.API._request(qry)
+        self.ACTIVITY_INFO = self.API.api_request(qry)
 
     @property
     def character_id(self):
