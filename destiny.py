@@ -51,7 +51,7 @@ class DestinyCharacter(object):
 
     @property
     def character_id(self):
-        return CHARACTER_INFO['characterBase']['characterId']
+        return self.CHARACTER_INFO['characterBase']['characterId']
 
     @property
     def base_character_level(self):
@@ -59,23 +59,24 @@ class DestinyCharacter(object):
 
     @property
     def character_class(self):
-        return character_hashes[CHARACTER_INFO['characterBase']['classHash']]
+        class_hash = self.CHARACTER_INFO['characterBase']['classHash']
+        return character_hashes[class_hash]
 
     @property
     def date_last_played(self):
-        return CHARACTER_INFO['characterBase']['dateLastPlayed']
+        return self.CHARACTER_INFO['characterBase']['dateLastPlayed']
 
     @property
     def grimoire_score(self):
-        return CHARACTER_INFO['characterBase']['grimoireScore']
+        return self.CHARACTER_INFO['characterBase']['grimoireScore']
 
     @property
     def grimoire_score(self):
-        return CHARACTER_INFO['characterBase']['grimoireScore']
+        return self.CHARACTER_INFO['characterBase']['grimoireScore']
 
     @property
     def light_level(self):
-        return CHARACTER_INFO['characterBase']['powerLevel']
+        return self.CHARACTER_INFO['characterBase']['powerLevel']
 
 if __name__ == '__main__':
     platform = 1  # XBOX: 1, PS: 2

@@ -11,3 +11,4 @@ Access Destiny's public API using Python
 - Add Flask app
 - Add IRC bot
 - Tests
+- Figure out what all the activity hashes translate to (ie: get the names/lvls)
