@@ -39,7 +39,7 @@ class DestinyCharacter(object):
         self.API = api
         self.CHARACTER_INFO = character_info
         self.activity_info()
-        self.character_hashes = {'Titan': 3655393761, 'Warlock': 2271682572,
+        self.class_hashes = {'Titan': 3655393761, 'Warlock': 2271682572,
                                  'Hunter': 671679327}
 
     def activity_info(self):
@@ -59,7 +59,7 @@ class DestinyCharacter(object):
     @property
     def character_class(self):
         class_hash = self.CHARACTER_INFO['characterBase']['classHash']
-        return character_hashes[class_hash]
+        return class_hashes[class_hash]
 
     @property
     def date_last_played(self):
