@@ -15,7 +15,8 @@ class DestinyAPI(object):
         self._characters()
 
     def api_request(self, qry):
-        req = requests.get(self.API_URL+qry, headers=self.REQUEST_HEADERS)
+        req = requests.get(self.API_URL+qry+'/?definitions=True',
+                           headers=self.REQUEST_HEADERS)
         return req.json()
 
     def _membership_id(self):
@@ -30,7 +31,11 @@ class DestinyAPI(object):
 
     def _characters(self):
         _characters = self.ACCOUNT_INFO['Response']['data']['characters']
-        self.CHARACTERS = [DestinyCharacter(self, i) for i in _characters]
+        k = 1
+        self.CHARACTERS = {}
+        for i in _characters:
+            self.CHARACTERS[k] = DestinyCharacter(self, i)
+            k += 1
 
 
 class DestinyCharacter(object):
@@ -40,7 +45,7 @@ class DestinyCharacter(object):
         self.CHARACTER_INFO = character_info
         self.activity_info()
         self.class_hashes = {'Titan': 3655393761, 'Warlock': 2271682572,
-                                 'Hunter': 671679327}
+                             'Hunter': 671679327}
 
     def activity_info(self):
         qry = '/%d/Account/%s/Character/%s/Activities/'
@@ -81,5 +86,4 @@ if __name__ == '__main__':
     platform = 1  # XBOX: 1, PS: 2
     username = 'ermff'
     api = DestinyAPI(platform, username)
-    for i in api.CHARACTERS:
-        pprint(i.ACTIVITY_INFO)
+    pprint(api.CHARACTERS)
