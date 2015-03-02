@@ -44,8 +44,8 @@ class DestinyCharacter(object):
         self.API = api
         self.CHARACTER_INFO = character_info
         self.activity_info()
-        self.class_hashes = {'Titan': 3655393761, 'Warlock': 2271682572,
-                             'Hunter': 671679327}
+        self.class_hashes = {3655393761: 'Titan', 2271682572: 'Warlock',
+                             671679327: 'Hunter'}
 
     def activity_info(self):
         qry = '/%d/Account/%s/Character/%s/Activities/'
@@ -53,26 +53,30 @@ class DestinyCharacter(object):
                      self.CHARACTER_INFO['characterBase']['characterId'])
         self.ACTIVITY_INFO = self.API.api_request(qry)
 
+    def __repr__(self):
+        # pprint(self.CHARACTER_INFO)
+        if self.base_character_level < 20:
+            level = self.base_character_level
+        else:
+            level = self.light_level
+        return "<Level %d %s>" % (level, self.character_class)
+
     @property
     def character_id(self):
         return self.CHARACTER_INFO['characterBase']['characterId']
 
     @property
     def base_character_level(self):
-        return self.CHARACTER_INFO['base_character_level']
+        return self.CHARACTER_INFO['baseCharacterLevel']
 
     @property
     def character_class(self):
         class_hash = self.CHARACTER_INFO['characterBase']['classHash']
-        return class_hashes[class_hash]
+        return self.class_hashes[class_hash]
 
     @property
     def date_last_played(self):
         return self.CHARACTER_INFO['characterBase']['dateLastPlayed']
-
-    @property
-    def grimoire_score(self):
-        return self.CHARACTER_INFO['characterBase']['grimoireScore']
 
     @property
     def grimoire_score(self):
@@ -86,4 +90,4 @@ if __name__ == '__main__':
     platform = 1  # XBOX: 1, PS: 2
     username = 'ermff'
     api = DestinyAPI(platform, username)
-    pprint(api.CHARACTERS)
+    #pprint(api.CHARACTERS)
