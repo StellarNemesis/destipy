@@ -47,12 +47,6 @@ class DestinyCharacter(object):
         self.class_hashes = {3655393761: 'Titan', 2271682572: 'Warlock',
                              671679327: 'Hunter'}
 
-    def activity_info(self):
-        qry = '/%d/Account/%s/Character/%s/Activities/'
-        qry = qry % (self.API.PLATFORM, self.API.MEMBERSHIP,
-                     self.CHARACTER_INFO['characterBase']['characterId'])
-        self.ACTIVITY_INFO = self.API.api_request(qry)
-
     def __repr__(self):
         # pprint(self.CHARACTER_INFO)
         if self.base_character_level < 20:
@@ -60,6 +54,12 @@ class DestinyCharacter(object):
         else:
             level = self.light_level
         return "<Level %d %s>" % (level, self.character_class)
+
+    def activity_info(self):
+        qry = '/%d/Account/%s/Character/%s/Activities/'
+        qry = qry % (self.API.PLATFORM, self.API.MEMBERSHIP,
+                     self.CHARACTER_INFO['characterBase']['characterId'])
+        self.ACTIVITY_INFO = self.API.api_request(qry)
 
     @property
     def character_id(self):
@@ -90,4 +90,6 @@ if __name__ == '__main__':
     platform = 1  # XBOX: 1, PS: 2
     username = 'ermff'
     api = DestinyAPI(platform, username)
-    #pprint(api.CHARACTERS)
+    # test
+    mychar = api.CHARACTERS[2]
+    #pprint(mychar.ACTIVITY_INFO['Response']['definitions']['activities'])
