@@ -5,6 +5,8 @@ Access Destiny's public API using Python
 
 - Everything.
 - ~~Add membership type to query instead of class constructor~~
+- Rename membership to membership_type
+- Make all variable names more consistent with api 
 - Check what the access key is actually required for
 - Add more classes
 - Do the rest of the api
