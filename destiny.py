@@ -5,14 +5,11 @@ from pprint import pprint
 
 class DestinyAPI(object):
 
-    def __init__(self, membership, username):
+    def __init__(self, membership_type, username):
         self.API_URL = 'https://www.bungie.net/Platform/Destiny'
         self.REQUEST_HEADERS = config['REQUEST_HEADERS']
-        self.MEMBERSHIP = membership
-        self.USERNAME = username
-        self._membership_id()
-        self._account_info()
-        self._characters()
+        self.membership_type = membership_type
+        self.username = username
 
     def _api_request(self, qry):
 
@@ -22,122 +19,98 @@ class DestinyAPI(object):
                            headers=self.REQUEST_HEADERS)
         return req.json()
 
-    def _membership_id(self):
-
-        """Retrieve and set the membership id for a user"""
-
-        qry = '/%d/Stats/GetMembershipIdByDisplayName/%s' % (self.MEMBERSHIP,
-                                                             self.USERNAME)
+    @property
+    def membership_id(self):
+        qry = '/%d/Stats/GetMembershipIdByDisplayName/%s'
+        qry = qry % (self.membership_type, self.username)
         data = self._api_request(qry)
-        self.MEMBERSHIP_ID = data['Response']  # will return 0 if invalid
+        return data['Response']  # will return 0 if invalid
 
-    def _account_info(self):
+    @property
+    def account_info(self):
+        qry = '/%d/Account/%s/' % (self.membership_type, self.membership_id)
+        data = self._api_request(qry)
+        return data
 
-        """Retrieve and set the account info for a user"""
-
-        qry = '/%d/Account/%s/' % (self.MEMBERSHIP, self.MEMBERSHIP_ID)
-        self.ACCOUNT_INFO = self._api_request(qry)
-
-    def _characters(self):
-
-        """Retrieve and set all the characters for a user"""
-
-        _characters = self.ACCOUNT_INFO['Response']['data']['characters']
-        k = 1
-        self.CHARACTERS = {}
-        for i in _characters:
-            self.CHARACTERS[k] = DestinyCharacter(self, i)
+    @property
+    def characters(self):
+        data = self.account_info['Response']['data']['characters']
+        k = 0
+        characters = {}
+        for i in data:
+            characters[k] = DestinyCharacter(self, i)
             k += 1
+        return characters
 
 
 class DestinyCharacter(object):
 
     def __init__(self, api, character_info):
-        self.API = api
-        self.CHARACTER_INFO = character_info
-        self._activities_info()
+        self.api = api
+        self.character_info = character_info
         self.class_hashes = {3655393761: 'Titan',
                              2271682572: 'Warlock',
                              671679327: 'Hunter'}
 
     def __repr__(self):
-        # pprint(self.CHARACTER_INFO)
         if self.base_character_level < 20:
             level = self.base_character_level
         else:
             level = self.light_level
         return "<Level %d %s>" % (level, self.character_class)
 
-    def _activities_info(self):
-
-        """Retrieve and set all activity info for a character"""
-
-        qry = '/%d/Account/%s/Character/%s/Activities/'
-        qry = qry % (self.API.MEMBERSHIP, self.API.MEMBERSHIP_ID,
-                     self.CHARACTER_INFO['characterBase']['characterId'])
-        self.ACTIVITIES_INFO = self.API._api_request(qry)
-
-    def _activity_hash_info(self, activity_hash):
-
-        """Retrieve general information regarding an activity"""
-
-        qry = '/Manifest/Activity/%d/' % activity_hash
-        activity_info = self.API._api_request(qry)
-        return activity_info
-
-    def _activity_hash_status(self, activity_hash):
-
-        """Retrieve specific progress information regarding an activity"""
-
-        _activities = self.ACTIVITIES_INFO['Response']['data']['available']
-        for activity in _activities:
+    def _activity_status(self, activity_hash):
+        for activity in self.activities_info['Response']['data']['available']:
             if activity_hash == activity['activityHash']:
                 return activity
+        return None
 
-    def _raid_acitivty_hash_status(self, activity_hash):
-
-        """Retrieve specific information regarding weekly raid completion"""
-
+    def _raid_activity_status(self, activity_hash):
         qry = '/Stats/ActivityHistory/%d/%s/%s'
-        qry = qry % (self.API.MEMBERSHIP, self.API.MEMBERSHIP_ID,
+        qry = qry % (self.api.membership_type, self.api.membership_id,
                      self.character_id)
-        qry = qry + '?page=0&count=1&definitions=true&mode=4'
-        print(qry)
-        _activities_history = self.API._api_request(qry)
+        qry = qry+'?page=0&count=1&definitions=true&mode=4'
+        _activities_history = self.api._api_request(qry)
         pprint(_activities_history)
 
     @property
+    def activities_info(self):
+        qry = '/%d/Account/%s/Character/%s/Activities/'
+        qry = qry % (self.api.membership_type, self.api.membership_id,
+                     self.character_id)
+        data = api._api_request(qry)
+        return data
+
+    @property
     def character_id(self):
-        return self.CHARACTER_INFO['characterBase']['characterId']
+        return self.character_info['characterBase']['characterId']
 
     @property
     def base_character_level(self):
-        return self.CHARACTER_INFO['baseCharacterLevel']
+        return self.character_info['baseCharacterLevel']
 
     @property
     def character_class(self):
-        class_hash = self.CHARACTER_INFO['characterBase']['classHash']
+        class_hash = self.character_info['characterBase']['classHash']
         return self.class_hashes[class_hash]
 
     @property
     def date_last_played(self):
-        return self.CHARACTER_INFO['characterBase']['dateLastPlayed']
+        return self.character_info['characterBase']['dateLastPlayed']
 
     @property
     def grimoire_score(self):
-        return self.CHARACTER_INFO['characterBase']['grimoireScore']
+        return self.character_info['characterBase']['grimoireScore']
 
     @property
     def light_level(self):
-        return self.CHARACTER_INFO['characterBase']['powerLevel']
+        return self.character_info['characterBase']['powerLevel']
 
 
 if __name__ == '__main__':
-    membership = 1  # XBOX: 1, PS: 2
-    # username = 'ermff'
-    api = DestinyAPI(1, 'ermff')
-    character = api.CHARACTERS[1]
-    character._raid_acitivty_hash_status(1)
+    api_user = DestinyAPI(1, 'ermff')
+    character = api_user.characters[0]
+    character._raid_activity_status(1)
 
 
 
