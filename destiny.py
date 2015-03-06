@@ -43,7 +43,7 @@ class DestinyCharacter(object):
     def __init__(self, api, character_info):
         self.API = api
         self.CHARACTER_INFO = character_info
-        self.activities_info()
+        self._activities_info()
         self.class_hashes = {3655393761: 'Titan',
                              2271682572: 'Warlock',
                              671679327: 'Hunter'}
@@ -56,20 +56,20 @@ class DestinyCharacter(object):
             level = self.light_level
         return "<Level %d %s>" % (level, self.character_class)
 
-    def activities_info(self):
+    def _activities_info(self):
         """Retrieve all activity info for a character"""
         qry = '/%d/Account/%s/Character/%s/Activities/'
         qry = qry % (self.API.PLATFORM, self.API.MEMBERSHIP,
                      self.CHARACTER_INFO['characterBase']['characterId'])
         self.ACTIVITIES_INFO = self.API.api_request(qry)
 
-    def activity_hash_info(self, activity_hash):
+    def _activity_hash_info(self, activity_hash):
         """Retrieve general information regarding an activity"""
         qry = '/Manifest/Activity/%d/' % activity_hash
         activity_info = self.API.api_request(qry)
         return activity_info
 
-    def activity_hash_status(self, activity_hash):
+    def _activity_hash_status(self, activity_hash):
         """Retrieve specific progress information regarding an activity"""
         _activities = self.ACTIVITIES_INFO['Response']['data']['available']
         for activity in _activities:
