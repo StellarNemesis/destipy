@@ -14,22 +14,26 @@ class DestinyAPI(object):
         self._account_info()
         self._characters()
 
-    def api_request(self, qry):
+    def _api_request(self, qry):
+        """Build the API request using query parameter"""
         req = requests.get(self.API_URL+qry+'/?definitions=True',
                            headers=self.REQUEST_HEADERS)
         return req.json()
 
     def _membership_id(self):
+        """Retrieve and set the membership id for a user"""
         qry = '/%d/Stats/GetMembershipIdByDisplayName/%s' % (self.PLATFORM,
                                                              self.USERNAME)
-        data = self.api_request(qry)
+        data = self._api_request(qry)
         self.MEMBERSHIP = data['Response']  # will return 0 if invalid
 
     def _account_info(self):
+        """Retrieve and set the account info for a user"""
         qry = '/%d/Account/%s/' % (self.PLATFORM, self.MEMBERSHIP)
-        self.ACCOUNT_INFO = self.api_request(qry)
+        self.ACCOUNT_INFO = self._api_request(qry)
 
     def _characters(self):
+        """Retrieve and set all the characters for a user"""
         _characters = self.ACCOUNT_INFO['Response']['data']['characters']
         k = 1
         self.CHARACTERS = {}
@@ -57,16 +61,16 @@ class DestinyCharacter(object):
         return "<Level %d %s>" % (level, self.character_class)
 
     def _activities_info(self):
-        """Retrieve all activity info for a character"""
+        """Retrieve and set all activity info for a character"""
         qry = '/%d/Account/%s/Character/%s/Activities/'
         qry = qry % (self.API.PLATFORM, self.API.MEMBERSHIP,
                      self.CHARACTER_INFO['characterBase']['characterId'])
-        self.ACTIVITIES_INFO = self.API.api_request(qry)
+        self.ACTIVITIES_INFO = self.API._api_request(qry)
 
     def _activity_hash_info(self, activity_hash):
         """Retrieve general information regarding an activity"""
         qry = '/Manifest/Activity/%d/' % activity_hash
-        activity_info = self.API.api_request(qry)
+        activity_info = self.API._api_request(qry)
         return activity_info
 
     def _activity_hash_status(self, activity_hash):
