@@ -29,7 +29,7 @@ class DestinyAPI(object):
 
     def _api_request(self, qry):
 
-        """Build the API request using query parameter"""
+        """Build the API request using query parameter."""
 
         req = requests.get(self.API_URL+qry,
                            headers=self.REQUEST_HEADERS)
@@ -86,7 +86,7 @@ class DestinyCharacter(object):
 
     def _raid_activity_status(self, activity_hash):
 
-        """Retrieve status of raid activity. Use this for Crota and VoG"""
+        """Retrieve status of raid activity. Use this for Crota and VoG."""
 
         qry = '/Stats/ActivityHistory/%d/%s/%s'
         qry = qry % (self.api.membership_type, self.api.membership_id,
@@ -99,14 +99,14 @@ class DestinyCharacter(object):
             if reference_id == activity_hash:
                 completed = activity['values']['completed']['statId']
                 return completed
-        #return None
+        return None
 
     @property
     def activities_info(self):
         qry = '/%d/Account/%s/Character/%s/Activities/'
         qry = qry % (self.api.membership_type, self.api.membership_id,
                      self.character_id)
-        data = self.api._api_request(qry+'?definitions=True')
+        data = self.api._api_request(qry)
         return data
 
     @property
@@ -137,7 +137,7 @@ class DestinyCharacter(object):
 
 if __name__ == '__main__':
     api_user = DestinyAPI(1, 'ermff')
-    character = api_user.characters[1]
+    character = api_user.characters[0]
     print(character)
-    print(character._activity_status(3468792475))
+    print(character._raid_activity_status(2659248071))
 
