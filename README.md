@@ -13,5 +13,5 @@ Access Destiny's public API using Python
 - Add Flask app
 - Add IRC bot
 - Add more examples
-- Tests
+- Find hash for daily heroic strike (doesn't show up in activities info)
 - ~~Figure out what all the activity hashes translate to (ie: get the names/lvls)~~

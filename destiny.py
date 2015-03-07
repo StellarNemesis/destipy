@@ -2,6 +2,22 @@ import requests
 from config import config
 from pprint import pprint
 
+hash_dict = {
+    'classes': {
+        3655393761: 'Titan',
+        2271682572: 'Warlock',
+        671679327: 'Hunter'},
+    'strikes': {
+        3468792474: 'Weekly Heroic Strike Level 30',
+        3468792475: 'Weekly Nightfall Strike'
+        },
+    'raids': {
+        1836893116: 'Crota\'s End Level 30',
+        2659248068: 'Vault of Glass Level 30',
+        2659248071: 'Vault of Glass Level 26'
+        },
+}
+
 
 class DestinyAPI(object):
 
@@ -48,9 +64,6 @@ class DestinyCharacter(object):
     def __init__(self, api, character_info):
         self.api = api
         self.character_info = character_info
-        self.class_hashes = {3655393761: 'Titan',
-                             2271682572: 'Warlock',
-                             671679327: 'Hunter'}
 
     def __repr__(self):
         if self.base_character_level < 20:
@@ -60,25 +73,40 @@ class DestinyCharacter(object):
         return "<Level %d %s>" % (level, self.character_class)
 
     def _activity_status(self, activity_hash):
+
+        """Retrieve the status of an activity. Use this for weekly strikes."""
+
+        qry = '/%d/Account/%s/Character/%s/Activities/'
+        qry = qry % (self.api.membership_type, self.api.membership_id,
+                     self.character_id)
+        data = self.api._api_request(qry)
         for activity in self.activities_info['Response']['data']['available']:
             if activity_hash == activity['activityHash']:
-                return activity
-        return None
+                return activity['isCompleted']
 
     def _raid_activity_status(self, activity_hash):
+
+        """Retrieve status of raid activity. Use this for Crota and VoG"""
+
         qry = '/Stats/ActivityHistory/%d/%s/%s'
         qry = qry % (self.api.membership_type, self.api.membership_id,
                      self.character_id)
         qry = qry+'?page=0&count=1&definitions=true&mode=4'
         _activities_history = self.api._api_request(qry)
-        pprint(_activities_history)
+        data = _activities_history['Response']['data']['activities']
+        for activity in data:
+            reference_id = activity['activityDetails']['referenceId']
+            if reference_id == activity_hash:
+                completed = activity['values']['completed']['statId']
+                return completed
+        #return None
 
     @property
     def activities_info(self):
         qry = '/%d/Account/%s/Character/%s/Activities/'
         qry = qry % (self.api.membership_type, self.api.membership_id,
                      self.character_id)
-        data = api._api_request(qry)
+        data = self.api._api_request(qry+'?definitions=True')
         return data
 
     @property
@@ -92,7 +120,7 @@ class DestinyCharacter(object):
     @property
     def character_class(self):
         class_hash = self.character_info['characterBase']['classHash']
-        return self.class_hashes[class_hash]
+        return hash_dict['classes'][class_hash]
 
     @property
     def date_last_played(self):
@@ -109,10 +137,7 @@ class DestinyCharacter(object):
 
 if __name__ == '__main__':
     api_user = DestinyAPI(1, 'ermff')
-    character = api_user.characters[0]
-    character._raid_activity_status(1)
+    character = api_user.characters[1]
+    print(character)
+    print(character._activity_status(3468792475))
 
-
-
-#     weeklys = {'crotanorm': 1836893116, 'weeklyheroichard': 692589233, 'nightfall': 692589232,
-# 'voghard': 2659248068, 'vognorm': 2659248071}
