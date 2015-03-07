@@ -31,8 +31,7 @@ class DestinyAPI(object):
 
         """Build the API request using query parameter."""
 
-        req = requests.get(self.API_URL+qry,
-                           headers=self.REQUEST_HEADERS)
+        req = requests.get(self.API_URL+qry, headers=self.REQUEST_HEADERS)
         return req.json()
 
     @property
@@ -76,10 +75,6 @@ class DestinyCharacter(object):
 
         """Retrieve the status of an activity. Use this for weekly strikes."""
 
-        qry = '/%d/Account/%s/Character/%s/Activities/'
-        qry = qry % (self.api.membership_type, self.api.membership_id,
-                     self.character_id)
-        data = self.api._api_request(qry)
         for activity in self.activities_info['Response']['data']['available']:
             if activity_hash == activity['activityHash']:
                 return activity['isCompleted']
@@ -92,8 +87,8 @@ class DestinyCharacter(object):
         qry = qry % (self.api.membership_type, self.api.membership_id,
                      self.character_id)
         qry = qry+'?page=0&count=1&definitions=true&mode=4'
-        _activities_history = self.api._api_request(qry)
-        data = _activities_history['Response']['data']['activities']
+        response = self.api._api_request(qry)
+        data = response['Response']['data']['activities']
         for activity in data:
             reference_id = activity['activityDetails']['referenceId']
             if reference_id == activity_hash:
@@ -139,5 +134,3 @@ if __name__ == '__main__':
     api_user = DestinyAPI(1, 'ermff')
     character = api_user.characters[0]
     print(character)
-    print(character._raid_activity_status(2659248071))
-
