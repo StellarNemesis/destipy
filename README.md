@@ -1,5 +1,7 @@
-# destiny-python
-Access Destiny's public API using Python
+destipy
+========
+
+Access Destiny's public API using Python.
  
 # todo
 
@@ -15,3 +17,20 @@ Access Destiny's public API using Python
 - Add more examples
 - Find hash for daily heroic strike (doesn't show up in activities info)
 - ~~Figure out what all the activity hashes translate to (ie: get the names/lvls)~~
+
+# License
+
+``` text
+DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+                    Version 2, December 2004
+
+ Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
+
+ Everyone is permitted to copy and distribute verbatim or modified
+ copies of this license document, and changing it is allowed as long
+ as the name is changed.
+
+            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+  0. You just DO WHAT THE FUCK YOU WANT TO.

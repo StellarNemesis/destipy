@@ -1,6 +1,5 @@
 import requests
-from destiny_hashes import hash_dict
-from config import config
+from .hashes import hash_dict
 from pprint import pprint
 
 
@@ -8,7 +7,7 @@ class DestinyAPI(object):
 
     def __init__(self, membership_type, username):
         self.API_URL = 'https://www.bungie.net/Platform/Destiny'
-        self.REQUEST_HEADERS = config['REQUEST_HEADERS']
+        self.REQUEST_HEADERS = {} # = config['REQUEST_HEADERS']
         self.membership_type = membership_type
         self.username = username
 
@@ -35,7 +34,7 @@ class DestinyAPI(object):
         data = self.account_info['Response']['data']['characters']
         characters = []
         for i in data:
-        	characters.append(DestinyCharacter(self, i))
+            characters.append(DestinyCharacter(self, i))
         return characters
 
 
@@ -56,8 +55,8 @@ class DestinyCharacter(object):
 
     def _activity_status(self, activity_hash):
         """
-        	Retrieve the status of an activity. 
-        	Use this for weekly strikes and daily story.
+            Retrieve the status of an activity. 
+            Use this for weekly strikes and daily story.
         """
         for activity in self.activities_info['Response']['data']['available']:
             if activity_hash == activity['activityHash']:
@@ -65,8 +64,8 @@ class DestinyCharacter(object):
 
     def _raid_activity_status(self, activity_hash):
         """
-        	Retrieve status of raid activity. 
-        	Use this for Crota and VoG.
+            Retrieve status of raid activity. 
+            Use this for Crota and VoG.
         """
         qry = '/Stats/ActivityHistory/%d/%s/%s'
         qry = qry % (self.api.membership_type, self.api.membership_id,
@@ -79,7 +78,7 @@ class DestinyCharacter(object):
             if reference_id == activity_hash:
                 completed = activity['values']['completed']['statId']
                 if completed:
-                	return "Completed"
+                    return "Completed"
         return "Incomplete"
 
     @property
@@ -114,19 +113,3 @@ class DestinyCharacter(object):
     @property
     def light_level(self):
         return self.character_info['characterBase']['powerLevel']
-
-
-if __name__ == '__main__':
-    platform = 1 # xbox
-    users = ['ermff']
-
-    for username in users:
-        print(username)
-        api_user = DestinyAPI(platform, username)
-        character = api_user.characters[0]
-        print(character)
-        pprint(character.character_info)
-        # raids = hash_dict['raids']
-        # for k, v in raids.iteritems():
-	       #  completed = character._raid_activity_status(k)
-	       #  print('%s %s' % (v, completed))
