@@ -125,7 +125,8 @@ if __name__ == '__main__':
         api_user = DestinyAPI(platform, username)
         character = api_user.characters[0]
         print(character)
-        raids = hash_dict['raids']
-        for k, v in raids.iteritems():
-	        completed = character._raid_activity_status(k)
-	        print('%s %s' % (v, completed))
+        pprint(character.character_info)
+        # raids = hash_dict['raids']
+        # for k, v in raids.iteritems():
+	       #  completed = character._raid_activity_status(k)
+	       #  print('%s %s' % (v, completed))
