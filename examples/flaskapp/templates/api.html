@@ -1,0 +1,6 @@
+Username: {{ api_user.username }}<br>
+Clan Name: {{ api_user.clan_name }} ({{ api_user.clan_tag }})<br>
+Characters: 
+{% for character in api_user.characters %}
+{{character}}
+{% endfor %}

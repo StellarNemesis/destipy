@@ -27,15 +27,25 @@ class DestinyAPI(object):
     def account_info(self):
         qry = '/%s/Account/%s/' % (self.membership_type, self.membership_id)
         data = self._api_request(qry)
-        return data
+        return data['Response']['data']
 
     @property
     def characters(self):
-        data = self.account_info['Response']['data']['characters']
+        data = self.account_info['characters']
         characters = []
         for i in data:
             characters.append(DestinyCharacter(self, i))
         return characters
+
+    @property
+    def clan_name(self):
+        return self.account_info['clanName'] 
+
+    @property
+    def clan_tag(self):
+        return self.account_info['clanTag']
+    
+    
 
 
 class DestinyCharacter(object):
