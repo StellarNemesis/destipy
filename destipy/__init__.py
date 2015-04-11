@@ -18,14 +18,14 @@ class DestinyAPI(object):
 
     @property
     def membership_id(self):
-        qry = '/%d/Stats/GetMembershipIdByDisplayName/%s'
+        qry = '/%s/Stats/GetMembershipIdByDisplayName/%s'
         qry = qry % (self.membership_type, self.username)
         data = self._api_request(qry)
         return data['Response']  # will return 0 if invalid
 
     @property
     def account_info(self):
-        qry = '/%d/Account/%s/' % (self.membership_type, self.membership_id)
+        qry = '/%s/Account/%s/' % (self.membership_type, self.membership_id)
         data = self._api_request(qry)
         return data
 

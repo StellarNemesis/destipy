@@ -1,7 +1,4 @@
 venv
-config.py
-examples
-ircbot.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
