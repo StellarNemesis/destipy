@@ -4,10 +4,6 @@ hash_dict = {
         2271682572: 'Warlock',
         671679327: 'Hunter',
         },
-    'strikes': {
-        3468792474: 'Weekly Heroic Strike Level 30',
-        3468792475: 'Weekly Nightfall Strike',
-        },
     'raids': {
         1836893119: 'Crota\'s End Level 33',
         1836893116: 'Crota\'s End Level 30',

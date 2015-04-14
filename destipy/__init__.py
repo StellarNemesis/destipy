@@ -3,6 +3,10 @@ from .hashes import hash_dict
 from pprint import pprint
 
 
+class DestinyUserException(Exception):
+    pass
+
+
 class DestinyAPI(object):
 
     def __init__(self, membership_type, username):
@@ -10,6 +14,8 @@ class DestinyAPI(object):
         self.REQUEST_HEADERS = {} # = config['REQUEST_HEADERS']
         self.membership_type = membership_type
         self.username = username
+        self.account_info # this will raise the exception if the user is invalid
+
 
     def _api_request(self, qry):
         """Build the API request using query parameter."""
@@ -21,13 +27,16 @@ class DestinyAPI(object):
         qry = '/%s/Stats/GetMembershipIdByDisplayName/%s'
         qry = qry % (self.membership_type, self.username)
         data = self._api_request(qry)
-        return data['Response']  # will return 0 if invalid
+        return data['Response']
 
     @property
     def account_info(self):
         qry = '/%s/Account/%s/' % (self.membership_type, self.membership_id)
         data = self._api_request(qry)
-        return data['Response']['data']
+        try:
+            return data['Response']['data']
+        except:
+            raise DestinyUserException('Invalid user.')
 
     @property
     def characters(self):
@@ -44,8 +53,6 @@ class DestinyAPI(object):
     @property
     def clan_tag(self):
         return self.account_info['clanTag']
-    
-    
 
 
 class DestinyCharacter(object):
@@ -61,7 +68,7 @@ class DestinyCharacter(object):
                 level = 20
         else:
             level = self.light_level
-        return "<Level %d %s>" % (level, self.character_class)
+        return "<Level %s %s>" % (level, self.character_class)
 
     def _activity_status(self, activity_hash):
         """
@@ -69,6 +76,7 @@ class DestinyCharacter(object):
             Use this for weekly strikes and daily story.
         """
         for activity in self.activities_info['Response']['data']['available']:
+            pprint(activity)
             if activity_hash == activity['activityHash']:
                 return activity['isCompleted']
 
@@ -77,7 +85,7 @@ class DestinyCharacter(object):
             Retrieve status of raid activity. 
             Use this for Crota and VoG.
         """
-        qry = '/Stats/ActivityHistory/%d/%s/%s'
+        qry = '/Stats/ActivityHistory/%s/%s/%s'
         qry = qry % (self.api.membership_type, self.api.membership_id,
                      self.character_id)
         qry = qry+'?page=0&count=5&definitions=true&mode=4'
@@ -91,9 +99,28 @@ class DestinyCharacter(object):
                     return "Completed"
         return "Incomplete"
 
+    # @property
+    # def nightfall_status(self):
+    #      for activity in self.activities_info['Response']['data']['available']:
+    #         pprint(activity)
+    #         if activity_hash == activity['activityHash']:
+    #             return activity['isCompleted']
+
+    @property
+    def weekly_heroic_status(self):
+        for activity in self.activities_info['Response']['data']['available']:
+            qry = '/Manifest/Activity/%s?mode=Strike' % activity['activityHash']
+            response = self.api._api_request(qry)
+            activity_name = response['Response']['data']['activity']['activityName']
+            if activity_name == 'Weekly Heroic Strike':
+                if activity['isCompleted']:
+                    return 'Completed'
+                else:
+                    return 'Incomplete'
+
     @property
     def activities_info(self):
-        qry = '/%d/Account/%s/Character/%s/Activities/'
+        qry = '/%s/Account/%s/Character/%s/Activities/'
         qry = qry % (self.api.membership_type, self.api.membership_id,
                      self.character_id)
         data = self.api._api_request(qry)
@@ -123,3 +150,4 @@ class DestinyCharacter(object):
     @property
     def light_level(self):
         return self.character_info['characterBase']['powerLevel']
+    
