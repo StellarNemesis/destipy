@@ -1,6 +1,9 @@
 import requests
+import requests_cache
 from .hashes import hash_dict
-from pprint import pprint
+
+
+requests_cache.install_cache('destiny_cache')
 
 
 class DestinyUserException(Exception):
@@ -17,9 +20,13 @@ class DestinyAPI(object):
         self.account_info # this will raise the exception if the user is invalid
 
 
-    def _api_request(self, qry):
-        """Build the API request using query parameter."""
-        req = requests.get(self.API_URL+qry, headers=self.REQUEST_HEADERS)
+    def _api_request(self, query, cache_enabled=True):
+        request_string = self.API_URL + query
+        if cache_enabled:
+            req = requests.get(request_string, headers=self.REQUEST_HEADERS)
+        else:
+            with requests_cache.disabled():
+                req = requests.get(request_string, headers=self.REQUEST_HEADERS)
         return req.json()
 
     @property
@@ -76,7 +83,6 @@ class DestinyCharacter(object):
             Use this for weekly strikes and daily story.
         """
         for activity in self.activities_info['Response']['data']['available']:
-            pprint(activity)
             if activity_hash == activity['activityHash']:
                 return activity['isCompleted']
 
