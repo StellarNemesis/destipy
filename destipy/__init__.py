@@ -14,7 +14,7 @@ class Destiny(object):
     pass
 
 
-class DestinyUser(object):
+class DestinyAccount(object):
 
     def __init__(self, membership_type, username):
         self.API_URL = 'https://www.bungie.net/Platform/Destiny'

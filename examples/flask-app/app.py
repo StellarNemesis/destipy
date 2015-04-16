@@ -13,7 +13,7 @@ def index():
 
 @app.route('/api/<platform>/<username>')
 def api(platform, username):
-    api_user = destipy.DestinyUser(platform, username)
+    api_user = destipy.DestinyAccount(platform, username)
     return render_template("api.html", api_user=api_user)
 
 if __name__ == '__main__':

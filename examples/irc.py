@@ -99,7 +99,7 @@ class IRCClient(asynchat.async_chat):
                 else:
                     print(username.decode('utf-8'))
                     try:
-                        api_user = destipy.DestinyUser(platform.decode('utf-8'), username.decode('utf-8'))
+                        api_user = destipy.DestinyAccount(platform.decode('utf-8'), username.decode('utf-8'))
                     except:
                        self.sendline(error_string)
                     else:
