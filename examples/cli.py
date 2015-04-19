@@ -33,7 +33,7 @@ if __name__ == '__main__':
     else:
         print("Platform selected: %s" % platform_selection)
         username = input("Enter your username: ")
-        api_user = destipy.DestinyAPI(platform, username)
+        api_user = destipy.DestinyAccount(platform, username)
         if api_user.membership_id == 0:
             print("Invalid username")
         else:

@@ -6,11 +6,15 @@ from .hashes import hash_dict
 requests_cache.install_cache('destiny_cache')
 
 
-class DestinyUserException(Exception):
+class DestinyException(Exception):
     pass
 
 
-class DestinyAPI(object):
+class Destiny(object):
+    pass
+
+
+class DestinyAccount(object):
 
     def __init__(self, membership_type, username):
         self.API_URL = 'https://www.bungie.net/Platform/Destiny'
@@ -43,7 +47,7 @@ class DestinyAPI(object):
         try:
             return data['Response']['data']
         except:
-            raise DestinyUserException('Invalid user.')
+            raise DestinyException('Invalid user.')
 
     @property
     def characters(self):
