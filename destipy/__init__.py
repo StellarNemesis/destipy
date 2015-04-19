@@ -126,17 +126,17 @@ class DestinyCharacter(object):
     #         if activity_hash == activity['activityHash']:
     #             return activity['isCompleted']
 
-    @property
-    def weekly_heroic_status(self):
-        for activity in self.activities_info['Response']['data']['available']:
-            qry = '/Manifest/Activity/%s?mode=Strike' % activity['activityHash']
-            response = self.api._api_request(qry)
-            activity_name = response['Response']['data']['activity']['activityName']
-            if activity_name == 'Weekly Heroic Strike':
-                if activity['isCompleted']:
-                    return 'Completed'
-                else:
-                    return 'Incomplete'
+    # @property
+    # def weekly_heroic_status(self):
+    #     for activity in self.activities_info['Response']['data']['available']:
+    #         qry = '/Manifest/Activity/%s?mode=Strike' % activity['activityHash']
+    #         response = self.api._api_request(qry)
+    #         activity_name = response['Response']['data']['activity']['activityName']
+    #         if activity_name == 'Weekly Heroic Strike':
+    #             if activity['isCompleted']:
+    #                 return 'Completed'
+    #             else:
+    #                 return 'Incomplete'
 
     @property
     def activities_info(self):
