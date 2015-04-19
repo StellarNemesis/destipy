@@ -10,7 +10,6 @@ Access Destiny's public API using Python.
 - ~~Rename membership to membership_type~~
 - Make all variable names more consistent with api (maybe)
 - ~~Check what the access key is actually required for~~
-- Add more classes
 - Do the rest of the api
 - Search for/cache the weekly/nightfall hashes until reset
 - ~~Add Flask app~~
