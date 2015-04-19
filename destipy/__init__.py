@@ -11,19 +11,11 @@ class DestinyException(Exception):
 
 
 class Destiny(object):
-    pass
 
-
-class DestinyAccount(object):
-
-    def __init__(self, membership_type, username):
+    def __init__(self):
         self.API_URL = 'https://www.bungie.net/Platform/Destiny'
         self.REQUEST_HEADERS = {} # = config['REQUEST_HEADERS']
-        self.membership_type = membership_type
-        self.username = username
-        self.account_info # this will raise the exception if the user is invalid
-
-
+        
     def _api_request(self, query, cache_enabled=True):
         request_string = self.API_URL + query
         if cache_enabled:
@@ -32,6 +24,24 @@ class DestinyAccount(object):
             with requests_cache.disabled():
                 req = requests.get(request_string, headers=self.REQUEST_HEADERS)
         return req.json()
+
+    def weekly_nightfall_strike():
+        pass
+
+    def weekly_heroic_strike():
+        pass
+
+    def daily_heroic_story():
+        pass
+
+
+class DestinyAccount(Destiny):
+
+    def __init__(self, membership_type, username):
+        super(DestinyAccount, self).__init__()
+        self.membership_type = membership_type
+        self.username = username
+        self.account_info # this will raise the exception if the user is invalid
 
     @property
     def membership_id(self):
