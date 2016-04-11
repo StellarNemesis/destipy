@@ -3,6 +3,12 @@ destipy
 
 Access Destiny's public API using Python.
 
+# To Run
+
+Currently destipy looks for two files in the destipy directory where "bungo_db.py" is located. These need to be added manually.
+- "dest_sql.content" Bungie's SQL database
+- "api_key.txt" This is where you need to put your API key
+
 # todo
 
 - Add inventory and glimmer
@@ -14,6 +20,7 @@ Access Destiny's public API using Python.
 - Add login to PSN/Xbox Live
 - Add way to auto download and unzip Bungie's SQL file
 - Figure out how item talent nodes/perks work and implement
+- Add test to see if API key is valid
 
 # License
 
