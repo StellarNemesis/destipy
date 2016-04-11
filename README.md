@@ -2,21 +2,18 @@ destipy
 ========
 
 Access Destiny's public API using Python.
- 
+
 # todo
 
 - Add inventory and glimmer
-- ~~Add membership type to query instead of class constructor~~
-- ~~Rename membership to membership_type~~
 - Make all variable names more consistent with api (maybe)
-- ~~Check what the access key is actually required for~~
 - Do the rest of the api
 - Search for/cache the weekly/nightfall hashes until reset
-- ~~Add Flask app~~
-- ~~Add IRC bot~~
 - Add more examples/refine current examples
-- ~~Find hash for daily heroic story (doesn't show up in activities info)~~
-- ~~Figure out what all the activity hashes translate to (ie: get the names/lvls)~~
+- Add Trials of Osiris report type thing
+- Add login to PSN/Xbox Live
+- Add way to auto download and unzip Bungie's SQL file
+- Figure out how item talent nodes/perks work and implement
 
 # License
 
