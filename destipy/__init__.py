@@ -3,6 +3,7 @@ import getpass
 import os
 
 import bungo_db
+import bungie_login
 
 class DestinyException(Exception):
   pass
@@ -46,8 +47,22 @@ class Destiny(object):
       req = self._session.get(request_string)
     return req.json()
 
-  def login(self, email, gamer_tag, platform, pw=None):
-    pass
+  def login(self, username, platform, password=None):
+    if not password:
+      password = getpass.getpass("Enter Password: ")
+
+    try :
+      platform = platform.lower()
+    except AttributeError:
+      pass
+    if platform in [1, 'xbox', 'xbone']:
+      bungie_login.xbox_login(username, password, self._session)
+    elif platform in [2, 'ps', 'psn', 'ps4', 'ps3', 'playstation', 'best'] :
+      bungie_login.psn_login(username, password, self._session)
+    else:
+      raise RuntimeError('Cannot parse platform "%s".' % platform)
+
+    return None
 
   def DestinyAccount(self, membership_type, username):
     return  DestinyAccount(self, membership_type, username)
@@ -97,7 +112,7 @@ class CachedData(object):
     return None
 
   def clear_cache(self):
-    for i in self._dict:
+    for i in self._dict.keys():
       if type(self._dict[i]) == CachedData:
         self._dict[i].clear_cache()
       else :
