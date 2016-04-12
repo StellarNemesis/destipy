@@ -1,7 +1,8 @@
 import requests
-import bungo_db
 import getpass
 import os
+
+import bungo_db
 
 class DestinyException(Exception):
   pass
@@ -25,27 +26,27 @@ class Destiny(object):
         print('Unable to obtain API key from "%s".' % fn)
         print('Please enter your API key.')
         api_key = getpass.getpass("API Key: ")
-    self.API_KEY = api_key
+    self._API_KEY = api_key
     self.API_URL = 'https://www.bungie.net/Platform/Destiny'
-    self.REQUEST_HEADERS = {'X-API-Key' : api_key}
-    self.db = bungo_db.bungo_db(api_key=self.API_KEY)
+    self.db = bungo_db.bungo_db(api_key=api_key)
     self._cache = CachedData()
     self._session = requests.Session()
+    self._session.headers['X-API-Key'] = api_key
 
   def _api_request(self, query, cache=False):
     request_string = self.API_URL + query
     if cache:
       if self._cache.has_key(request_string):
         return self._cache[request_string]
-      req = requests.get(request_string, headers=self.REQUEST_HEADERS)
+      req = self._session.get(request_string)
       out = req.json()
       self._cache[request_string] = out
       return out
     else:
-      req = requests.get(request_string, headers=self.REQUEST_HEADERS)
+      req = self._session.get(request_string)
     return req.json()
 
-  def login(self, email, gamer_tag, pw=None):
+  def login(self, email, gamer_tag, platform, pw=None):
     pass
 
   def DestinyAccount(self, membership_type, username):
