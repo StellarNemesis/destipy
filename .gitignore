@@ -1,5 +1,11 @@
 venv
-destiny_cache.sqlite
+# API key and sql files
+destipy/api_key.txt
+destipy/*___bungo-db.sql
+
+# vim files
+*.swp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
