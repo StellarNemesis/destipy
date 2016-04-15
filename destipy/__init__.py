@@ -15,6 +15,9 @@ class DestinyException(Exception):
 class Destiny(object):
 
   def __init__(self, api_key=None):
+    self.API_URL = 'https://www.bungie.net/Platform/Destiny'
+    self._cache = CachedData()
+
     if not api_key:
       fn = os.path.join(parrent_dir, 'api_key.txt')
       if os.path.isfile(fn):
@@ -24,18 +27,43 @@ class Destiny(object):
               line = line.strip()
               #test(line)
               api_key = line
-            if api_key :
+            if self._test_api_key(api_key) :
               break
-      if not api_key :
-        print('Unable to obtain API key from "%s".' % fn)
+      if not self._test_api_key(api_key) :
+        print('Unable to obtain valid API key from "%s".' % fn)
         print('Please enter your API key.')
         api_key = raw_input("API Key: ")
+        if not self._test_api_key(api_key):
+          print('Invalid API key entered.')
+          print('Visit https://www.bungie.net/en/User/API to obtain API key.')
+        print('Do you want to save your API key to file (%s)?' % fn)
+        write_api = None
+        while not write_api in ['y', 'n', 'yes', 'no']:
+          write_api = raw_input('y/n: ').lower()
+        if write_api[0] == 'y':
+          if os.path.isfile(fn):
+            mode = 'a'
+          else:
+            mode = 'w'
+          with open(fn, mode) as f:
+            f.write(api_key)
+
     self._API_KEY = api_key
-    self.API_URL = 'https://www.bungie.net/Platform/Destiny'
-    self._cache = CachedData()
     self._session = requests.Session()
     self._session.headers['X-API-Key'] = api_key
     self.db = self._grab_bungo_db()
+
+  def _test_api_key(self, api_key=None):
+    if not api_key:
+      try:
+        api_key = self._API_KEY
+      except AttributeError:
+        return False
+    req_url = self.API_URL + '/Manifest'
+    req = requests.get(req_url, headers={'X-API-Key' : api_key})
+    if not req.status_code == 200:
+      return False
+    return req.json()['ErrorCode'] == 1
 
   def _grab_bungo_db(self, del_old=True):
     resp = self._api_request('/Manifest')['Response']
