@@ -95,6 +95,7 @@ class Destiny(object):
       loc1 = os.path.join(parrent_dir, version + '___bungo-db.sql')
       shutil.move(loc0, loc1)
 
+      os.remove(zip_fn)
       if del_old:
         try :
           os.remove(db._fn)
