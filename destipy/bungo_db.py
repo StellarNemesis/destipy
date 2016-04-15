@@ -80,7 +80,7 @@ class sql_version(object):
     return not a_lt_b(other_ver, self.version)
 
 class bungo_db():
-  def __init__(self, fn=None, api_key=None, fully_loaded=False):
+  def __init__(self, fn=None, fully_loaded=False):
     if not fn:
       my_key = lambda fn : sql_version(os.path.split(fn)[-1][:-15])
       files = glob.glob(os.path.join(parrent_dir, '*___bungo-db.sql'))

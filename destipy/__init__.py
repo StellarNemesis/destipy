@@ -51,6 +51,7 @@ class Destiny(object):
       url = 'https://www.bungie.net' + resp['mobileWorldContentPaths']['en']
       zip_fn = os.path.join(parrent_dir, '_tmp_file.zip')
       # NOTE the stream=True parameter
+      print('Downloading SQL file %s.' %url)
       r = self._session.get(url, stream=True)
       with open(zip_fn, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024):
@@ -73,7 +74,7 @@ class Destiny(object):
         except UnboundLocalError:
           pass
 
-      db = bungo_db.bungo_db(fn=loc1, api_key=api_key)
+      db = bungo_db.bungo_db(fn=loc1)
 
     return db
 
