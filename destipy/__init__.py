@@ -2,6 +2,7 @@ import requests
 import getpass
 import os
 import shutil
+import zipfile
 
 import bungo_db
 import bungie_login
@@ -31,17 +32,17 @@ class Destiny(object):
         api_key = raw_input("API Key: ")
     self._API_KEY = api_key
     self.API_URL = 'https://www.bungie.net/Platform/Destiny'
-    self.db = bungo_db.bungo_db(api_key=api_key)
     self._cache = CachedData()
     self._session = requests.Session()
     self._session.headers['X-API-Key'] = api_key
+    self.db = self._grab_bungo_db()
 
   def _grab_bungo_db(self, del_old=True):
     resp = self._api_request('/Manifest')['Response']
     version = resp['version']
 
     try :
-      db = bungo_db.bungo_db(api_key=api_key)
+      db = bungo_db.bungo_db()
       renew = db._older_than(version)
     except RuntimeError:
       renew = True
@@ -66,8 +67,11 @@ class Destiny(object):
       shutil.move(loc0, loc1)
 
       if del_old:
-        os.remove(db._fn)
-        del db
+        try :
+          os.remove(db._fn)
+          del db
+        except UnboundLocalError:
+          pass
 
       db = bungo_db.bungo_db(fn=loc1, api_key=api_key)
 

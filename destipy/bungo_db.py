@@ -40,7 +40,7 @@ def print_names(db, table):
         out = ('????? ,', i)
     print(' '.join(out))
 
-def _a_older_than_b(a, b):
+def a_lt_b(a, b):
   try :
     if not a:
       return True
@@ -49,28 +49,45 @@ def _a_older_than_b(a, b):
     a = a.split('.')
     b = b.split('.')
     for i in [1, 2, 3, 0]:
-      if a[i] < b[i] :
+      if int(a[i]) < int(b[i]) :
         return True
-      if a[i] > b[i] :
+      if int(a[i]) > int(b[i]) :
         return False
     a = a[-1].split('-')
     b = a[-1].split('-')
     for i in [0, 1]:
-      if a[i] < b[i] :
+      if int(a[i]) < int(b[i]) :
         return True
-      if a[i] > b[i] :
+      if int(a[i]) > int(b[i]) :
         return False
     return False
-  except :
+  except IndexError:
     return True
+
+class sql_version(object):
+  def __init__(self, version):
+    self.version = version
+  def __repr__(self):
+    return '<SQL Version: %s>' % self.version
+  def __lt__(self, other_ver):
+    try :
+      other_ver = other_ver.version
+    except AttributeError:
+      pass
+    a = a_lt_b(self.version, other_ver)
+    if not a:
+      return a
+    return not a_lt_b(other_ver, self.version)
 
 class bungo_db():
   def __init__(self, fn=None, api_key=None, fully_loaded=False):
     if not fn:
+      my_key = lambda fn : sql_version(os.path.split(fn)[-1][:-15])
       files = glob.glob(os.path.join(parrent_dir, '*___bungo-db.sql'))
       if not files :
         raise RuntimeError('Unable to locate SQL file in "%s".' % parrent_dir)
-
+      files.sort(key=my_key)
+      fn = files[-1]
     self._fn = fn
     self._fully_loaded_bool = fully_loaded
     self.data = self._sql_2_tbl(fn)
@@ -85,9 +102,10 @@ class bungo_db():
       raise RuntimeError('Unable to read SQL file "%s".' % fn)
     tmp = '___bungo-db.sql'
     if fn[-len(tmp):] == tmp:
-      self.version = fn[:-len(tmp)]
-    else:
-      self.version = -1
+      version = os.path.split(fn)[-1][:-len(tmp)]
+    else :
+      version = -1
+    self.version = sql_version(version)
 
   @property
   def tables(self):
@@ -107,7 +125,7 @@ class bungo_db():
     return out
 
   def _older_than(self, version):
-    return _a_older_than_b(self.version, version)
+    return self.version < sql_version(version)
 
 class bungo_table():
   def __init__(self, name, cur, fully_loaded=False):
