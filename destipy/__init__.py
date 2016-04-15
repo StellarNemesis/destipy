@@ -42,8 +42,8 @@ class Destiny(object):
 
     try :
       db = bungo_db.bungo_db(api_key=api_key)
-      renew = db.older_than(version)
-    except IndexError:
+      renew = db._older_than(version)
+    except RuntimeError:
       renew = True
 
     if renew :

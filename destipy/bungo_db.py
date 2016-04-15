@@ -4,8 +4,10 @@ try:
 except ImportError:
   import json
 import os
+import glob
 
 cp_dict_attr = ['__getitem__', '__len__', '__contains__', '__iter__', 'keys', 'values']
+parrent_dir = os.path.split(os.path.realpath(__file__))[0]
 
 def _signed_2_unsigned(integer, size=32):
   out = integer
@@ -38,13 +40,37 @@ def print_names(db, table):
         out = ('????? ,', i)
     print(' '.join(out))
 
+def _a_older_than_b(a, b):
+  try :
+    if not a:
+      return True
+    if a == -1 :
+      return True
+    a = a.split('.')
+    b = b.split('.')
+    for i in [1, 2, 3, 0]:
+      if a[i] < b[i] :
+        return True
+      if a[i] > b[i] :
+        return False
+    a = a[-1].split('-')
+    b = a[-1].split('-')
+    for i in [0, 1]:
+      if a[i] < b[i] :
+        return True
+      if a[i] > b[i] :
+        return False
+    return False
+  except :
+    return True
+
 class bungo_db():
   def __init__(self, fn=None, api_key=None, fully_loaded=False):
     if not fn:
-      fn = os.path.split(os.path.realpath(__file__))[0]
-      fn = os.path.join(fn, 'dest_sql.content')
-      if not os.path.isfile(fn):
-        raise RuntimeError('Unable to locate SQL file "%s".' % fn)
+      files = glob.glob(os.path.join(parrent_dir, '*___bungo-db.sql'))
+      if not files :
+        raise RuntimeError('Unable to locate SQL file in "%s".' % parrent_dir)
+
     self._fn = fn
     self._fully_loaded_bool = fully_loaded
     self.data = self._sql_2_tbl(fn)
@@ -56,7 +82,12 @@ class bungo_db():
       elif table.short == 'class' :
         setattr(self, 'Class', table)
     if not self.tables :
-        raise RuntimeError('Unable to read SQL file "%s".' % fn)
+      raise RuntimeError('Unable to read SQL file "%s".' % fn)
+    tmp = '___bungo-db.sql'
+    if fn[-len(tmp):] == tmp:
+      self.version = fn[:-len(tmp)]
+    else:
+      self.version = -1
 
   @property
   def tables(self):
@@ -74,6 +105,9 @@ class bungo_db():
     out = {table: bungo_table(table, cur, fully_loaded=self._fully_loaded_bool)
            for table in tables}
     return out
+
+  def _older_than(self, version):
+    return _a_older_than_b(self.version, version)
 
 class bungo_table():
   def __init__(self, name, cur, fully_loaded=False):
