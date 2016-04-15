@@ -14,7 +14,10 @@ httplib.HTTPConnection.debuglevel = 0
 
 import requests
 # https://urllib3.readthedocs.org/en/latest/security.html#insecurerequestwarning
-requests.packages.urllib3.disable_warnings()
+try:
+  requests.packages.urllib3.disable_warnings()
+except AttributeError:
+  pass
 
 def psn_login(username, password, session=None, api_key=None):
     logger = logging.getLogger(__name__)

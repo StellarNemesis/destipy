@@ -1,9 +1,12 @@
 import requests
 import getpass
 import os
+import shutil
 
 import bungo_db
 import bungie_login
+
+parrent_dir = os.path.split(os.path.realpath(__file__))[0]
 
 class DestinyException(Exception):
   pass
@@ -12,8 +15,7 @@ class Destiny(object):
 
   def __init__(self, api_key=None):
     if not api_key:
-      fn = os.path.split(os.path.realpath(__file__))[0]
-      fn = os.path.join(fn, 'api_key.txt')
+      fn = os.path.join(parrent_dir, 'api_key.txt')
       if os.path.isfile(fn):
         with open(fn, 'r') as f:
           for line in f:
@@ -26,13 +28,50 @@ class Destiny(object):
       if not api_key :
         print('Unable to obtain API key from "%s".' % fn)
         print('Please enter your API key.')
-        api_key = getpass.getpass("API Key: ")
+        api_key = raw_input("API Key: ")
     self._API_KEY = api_key
     self.API_URL = 'https://www.bungie.net/Platform/Destiny'
     self.db = bungo_db.bungo_db(api_key=api_key)
     self._cache = CachedData()
     self._session = requests.Session()
     self._session.headers['X-API-Key'] = api_key
+
+  def _grab_bungo_db(self, del_old=True):
+    resp = self._api_request('/Manifest')['Response']
+    version = resp['version']
+
+    try :
+      db = bungo_db.bungo_db(api_key=api_key)
+      renew = db.older_than(version)
+    except IndexError:
+      renew = True
+
+    if renew :
+      url = 'https://www.bungie.net' + resp['mobileWorldContentPaths']['en']
+      zip_fn = os.path.join(parrent_dir, '_tmp_file.zip')
+      # NOTE the stream=True parameter
+      r = self._session.get(url, stream=True)
+      with open(zip_fn, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=1024):
+          if chunk: # filter out keep-alive new chunks
+            f.write(chunk)
+      # unzip
+      zip_ref = zipfile.ZipFile(zip_fn, 'r')
+      zip_ref.extractall(parrent_dir)
+      zip_ref.close()
+
+      # rename
+      loc0 = os.path.join(parrent_dir, url.split('/')[-1])
+      loc1 = os.path.join(parrent_dir, version + '___bungo-db.sql')
+      shutil.move(loc0, loc1)
+
+      if del_old:
+        os.remove(db._fn)
+        del db
+
+      db = bungo_db.bungo_db(fn=loc1, api_key=api_key)
+
+    return db
 
   def _api_request(self, query, cache=False):
     request_string = self.API_URL + query
