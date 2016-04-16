@@ -188,6 +188,7 @@ class Destiny(object):
 
 class CachedData(object):
   def __init__(self):
+    '''Creates an empty cache to store data in.'''
     self._dict = {}
     for attr in ['__len__', '__contains__', '__iter__', 'keys', 'values']:
       setattr(self, attr, getattr(self._dict, attr))
@@ -223,6 +224,7 @@ class CachedData(object):
 class DestinyAccount(object):
 
   def __init__(self, api, membership_type, username):
+    '''Load info from a destiny account.'''
     self.api = api
     self.membership_type = membership_type
     self.username = username
@@ -239,6 +241,7 @@ class DestinyAccount(object):
 
   @property
   def membership_id(self):
+    # gives membership id number
     qry = '/%s/Stats/GetMembershipIdByDisplayName/%s'
     qry = qry % (self.membership_type, self.username)
     data = self.api._api_request(qry, cache=True)
@@ -246,6 +249,7 @@ class DestinyAccount(object):
 
   @property
   def account_info(self):
+    # Returns account info or raises error if user is invalid
     qry = '/%s/Account/%s/Summary' % (self.membership_type, self.membership_id)
     data = self.api._api_request(qry)
     try:
@@ -270,8 +274,8 @@ class DestinyAccount(object):
     return self.account_info['clanTag']
 
 class DestinyCharacter(object):
-
   def __init__(self, account, character_info):
+    '''Returns Destiny character.'''
     self.account = account
     self.api = account.api
     self.character_info = character_info
@@ -370,12 +374,19 @@ class DestinyCharacter(object):
             data['Response']['data']['items']]
 
 def itemWrapper(api, data, character=None):
+  '''Handle item data and construct the proper item child class.
+  Optional character input is the owner/holder of the item.
+  This function should be the only method used to construct items.'''
   itemType = api.db.inventoryBucket[data['bucketHash']].name
-  if (itemType.split(' '))[-1] == 'Weapons':
+  last = (itemType.split(' '))[-1]
+  if last == 'Weapons':
     return DestinyWeapon(api, data, character)
-  elif (itemType.split(' '))[-1] == 'Subclass':
+  elif last == 'Subclass':
     return DestinySubclass(api, data, character)
+  elif last in ['Armor', 'Ghost', 'Helmet', 'Gauntlets', 'Artifacts']:
+    return DestinyArmor(api, data, character)
   else :
+    print last
     return DestinyItem(api, data, character)
 
 class DestinyItem(object):
@@ -400,7 +411,7 @@ class DestinyItem(object):
   @property
   def itemType(self):
     out = self.api.db.inventoryBucket[self.data['bucketHash']].name
-    if out[-3:] != 'ass' : # there are a lot of class-holes out there
+    if out[-3:] != 'ass' : # haha ass...
       out = out.rstrip('s')
     return out
 
@@ -463,6 +474,16 @@ class DestinyWeapon(DestinyEquipment):
   def __repr__(self):
     tmp = (self.name, self.itemType)
     return "<DestinyWeapon %s, %s>" % tmp
+
+class DestinyArmor(DestinyEquipment):
+
+  def __init__(self, *args, **kwargs):
+    '''This should never be called directly; only through itemWrapper.'''
+    super(DestinyArmor, self).__init__(*args, **kwargs)
+
+  def __repr__(self):
+    tmp = (self.name, self.itemType)
+    return "<DestinyArmor %s, %s>" % tmp
 
 class DestinySubclass(DestinyEquipment):
 
