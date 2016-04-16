@@ -79,20 +79,21 @@ class sql_version(object):
       return a
     return not a_lt_b(other_ver, self.version)
 
-class bungo_db():
+class bungo_db(object):
   def __init__(self, fn=None, fully_loaded=False):
     if not fn:
-      my_key = lambda fn : sql_version(os.path.split(fn)[-1][:-15])
       files = glob.glob(os.path.join(parrent_dir, '*___bungo-db.sql'))
       if not files :
         raise RuntimeError('Unable to locate SQL file in "%s".' % parrent_dir)
+      my_key = lambda fn : sql_version(os.path.split(fn)[-1][:-15])
       files.sort(key=my_key)
       fn = files[-1]
     self._fn = fn
     self._fully_loaded_bool = fully_loaded
     self.data = self._sql_2_tbl(fn)
     for attr in cp_dict_attr:
-      setattr(self, attr, getattr(self.data, attr))
+      if not hasattr(self, attr):
+        setattr(self, attr, getattr(self.data, attr))
     for table in self.values():
       if not table.short in ['class']:
         setattr(self, table.short, table)
@@ -106,6 +107,17 @@ class bungo_db():
     else :
       version = -1
     self.version = sql_version(version)
+
+  def __getitem__(self, key):
+    try :
+      return self.data[key]
+    except KeyError:
+      pass
+    try :
+      key = 'Destiny' + key[0].upper() + key[1:] + 'Definition'
+    except TypeError:
+      raise KeyError(key)
+    return self.data[key]
 
   @property
   def tables(self):
@@ -127,7 +139,7 @@ class bungo_db():
   def _older_than(self, version):
     return self.version < sql_version(version)
 
-class bungo_table():
+class bungo_table(object):
   def __init__(self, name, cur, fully_loaded=False):
     self.table_name = name
     self.short = name[7].lower() + name[8:-10]
