@@ -15,20 +15,25 @@ class DestinyException(Exception):
 class Destiny(object):
 
   def __init__(self, api_key=None):
+    '''Intialize the Destiny API backend.'''
     self.API_URL = 'https://www.bungie.net/Platform/Destiny'
     self._cache = CachedData()
 
+    # if api key is not supplied then get one
     if not api_key:
+      # see if we have one on file
       fn = os.path.join(parrent_dir, 'api_key.txt')
       if os.path.isfile(fn):
         with open(fn, 'r') as f:
+          # each line not beginning with '#' may be a key
           for line in f:
             if line[0] != '#' :
               line = line.strip()
-              #test(line)
               api_key = line
+            # once we have a valid key, stop searching
             if self._test_api_key(api_key) :
               break
+      # if we don't have a valid key, then ask user for one
       if not self._test_api_key(api_key) :
         print('Unable to obtain valid API key from "%s".' % fn)
         print('Please enter your API key.')
@@ -36,6 +41,9 @@ class Destiny(object):
         if not self._test_api_key(api_key):
           print('Invalid API key entered.')
           print('Visit https://www.bungie.net/en/User/API to obtain API key.')
+          while not self._test_api_key(api_key):
+            api_key = raw_input("API Key: ")
+        # now we have a valid key. See if user wants to save it
         print('Do you want to save your API key to file (%s)?' % fn)
         write_api = None
         while not write_api in ['y', 'n', 'yes', 'no']:
@@ -49,11 +57,14 @@ class Destiny(object):
             f.write(api_key)
 
     self._API_KEY = api_key
+    # all api requests are handled trough this session
     self._session = requests.Session()
     self._session.headers['X-API-Key'] = api_key
+    # load Bungie's SQL file and download it if necessary
     self.db = self._grab_bungo_db()
 
   def _test_api_key(self, api_key=None):
+    '''Test if api_key is valid (valid => True).'''
     if not api_key:
       try:
         api_key = self._API_KEY
@@ -66,9 +77,13 @@ class Destiny(object):
     return req.json()['ErrorCode'] == 1
 
   def _grab_bungo_db(self, del_old=True):
+    '''Load Bungie's SQL manifest if we have an up to date one.
+    Download it if we don't.'''
+    # see what the newest version is
     resp = self._api_request('/Manifest')['Response']
     version = resp['version']
 
+    # if we have a SQL file saved check the version
     try :
       db = bungo_db.bungo_db()
       renew = db._older_than(version)
@@ -76,26 +91,28 @@ class Destiny(object):
       renew = True
 
     if renew :
+      # time to get new SQL file
       url = 'https://www.bungie.net' + resp['mobileWorldContentPaths']['en']
       zip_fn = os.path.join(parrent_dir, '_tmp_file.zip')
-      # NOTE the stream=True parameter
       print('Downloading SQL file %s.' %url)
       r = self._session.get(url, stream=True)
       with open(zip_fn, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024):
           if chunk: # filter out keep-alive new chunks
             f.write(chunk)
-      # unzip
+      # unzip SQL file
       zip_ref = zipfile.ZipFile(zip_fn, 'r')
       zip_ref.extractall(parrent_dir)
       zip_ref.close()
 
-      # rename
+      # rename SQL file based on version name
       loc0 = os.path.join(parrent_dir, url.split('/')[-1])
       loc1 = os.path.join(parrent_dir, version + '___bungo-db.sql')
       shutil.move(loc0, loc1)
 
+      # delete now obsolete zip file
       os.remove(zip_fn)
+      # delete old SQL file because we won't use it again
       if del_old:
         try :
           os.remove(db._fn)
@@ -103,17 +120,21 @@ class Destiny(object):
         except UnboundLocalError:
           pass
 
+      # load new SQL file
       db = bungo_db.bungo_db(fn=loc1)
 
     return db
 
   def _api_request(self, query, cache=False):
+    '''Send a 'get' request to the Destiny API. 'cache' saves response to memory.'''
     request_string = self.API_URL + query
     if cache:
+      # check if we've loaded this before
       if self._cache.has_key(request_string):
         return self._cache[request_string]
       req = self._session.get(request_string)
       out = req.json()
+      # save to memory
       self._cache[request_string] = out
       return out
     else:
@@ -121,16 +142,29 @@ class Destiny(object):
     return req.json()
 
   def login(self, username, platform, password=None):
+    '''Login to PSN or Xbox Live.
+    !CURRENTLY XBOX LIVE LOGIN IS NOT IMPLEMENTED!
+    Usage: login(username, platform, password=None)
+    Usernames for PSN are email addresses.
+    Platform values : xbox (1) or psn (2).
+    If password is not given it will be prompted.
+    '''
     if not password:
+      # get password from user
       password = getpass.getpass("Enter Password: ")
-
+    # parse platform entry
     try :
       platform = platform.lower()
     except AttributeError:
       pass
     if platform in [1, 'xbox', 'xbone']:
-      bungie_login.xbox_login(username, password, self._session)
+      # login to xbox live
+      try :
+        bungie_login.xbox_login(username, password, self._session)
+      except AttributeError:
+        raise DestinyException('Xbox Live login is currently not implemented.')
     elif platform in [2, 'ps', 'psn', 'ps4', 'ps3', 'playstation', 'best'] :
+      # login to psn
       bungie_login.psn_login(username, password, self._session)
     else:
       raise DestinyError('Cannot parse platform "%s".' % platform)
@@ -138,19 +172,10 @@ class Destiny(object):
     return None
 
   def DestinyAccount(self, membership_type, username):
+    '''Return account info for a Destiny account.'''
     return  DestinyAccount(self, membership_type, username)
 
 ##############
-
-  def _get_hash(self, string, num, name=False):
-    if string[-4:] == 'Hash' :
-      string = string[:-4]
-    out = self._api_request('/Manifest/%s/%s' % (string, num), cache=True)['Response']['data']
-    if name :
-      if string in out :
-        out = out[string]
-      out = out[string + 'Name']
-    return out
 
   def weekly_nightfall_strike():
     pass
