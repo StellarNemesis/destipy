@@ -133,7 +133,7 @@ class Destiny(object):
     elif platform in [2, 'ps', 'psn', 'ps4', 'ps3', 'playstation', 'best'] :
       bungie_login.psn_login(username, password, self._session)
     else:
-      raise RuntimeError('Cannot parse platform "%s".' % platform)
+      raise DestinyError('Cannot parse platform "%s".' % platform)
 
     return None
 
