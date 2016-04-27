@@ -7,7 +7,13 @@ import zipfile
 import bungo_db
 import bungie_login
 
+try:
+  from get_gnome_key import login_info
+except ImportError:
+  pass
+
 parrent_dir = os.path.split(os.path.realpath(__file__))[0]
+_default_platform = 2
 
 class DestinyException(Exception):
   pass
@@ -62,6 +68,10 @@ class Destiny(object):
     self._session.headers['X-API-Key'] = api_key
     # load Bungie's SQL file and download it if necessary
     self.db = self._grab_bungo_db()
+    try:
+      self.login()
+    except:
+      pass
 
   def _test_api_key(self, api_key=None):
     '''Test if api_key is valid (valid => True).'''
@@ -141,7 +151,13 @@ class Destiny(object):
       req = self._session.get(request_string)
     return req.json()
 
-  def login(self, username, platform, password=None):
+  def _api_post(self, query, params={}):
+    '''Send a 'post' to the Destiny API.'''
+    request_string = self.API_URL + query
+    req = self._session.post(request_string, params = params)
+    return req.json()
+
+  def login(self, username=None, platform=None, password=None):
     '''Login to PSN or Xbox Live.
     !CURRENTLY XBOX LIVE LOGIN IS NOT IMPLEMENTED!
     Usage: login(username, platform, password=None)
@@ -149,9 +165,22 @@ class Destiny(object):
     Platform values : xbox (1) or psn (2).
     If password is not given it will be prompted.
     '''
+    if not platform:
+      platform = _default_platform
+    if not username and not password:
+      try :
+        username, password = login_info(platform)
+      except NameError:
+        pass
+    if not username:
+      raise ValueError('Cannot obtain username.')
     if not password:
       # get password from user
-      password = getpass.getpass("Enter Password: ")
+      try:
+        password = getpass.getpass("Enter Password: ")
+      except EOFError:
+        print('Unable to provide echoless prompt.')
+        password = raw_input("Enter Password: ")
     # parse platform entry
     try :
       platform = platform.lower()
@@ -170,6 +199,13 @@ class Destiny(object):
       raise DestinyError('Cannot parse platform "%s".' % platform)
 
     return None
+
+  def equipItems(self, items, character):
+    params = {'characterId' : character.character_id,
+        'membershipType' : character.character_info['characterBase']['membershipType'],
+        'itemId' : [i.itemId for i in items]}
+    return self._api_post('/EquipItems', params)
+
 
   def DestinyAccount(self, membership_type, username):
     '''Return account info for a Destiny account.'''
@@ -386,7 +422,6 @@ def itemWrapper(api, data, character=None):
   elif last in ['Armor', 'Ghost', 'Helmet', 'Gauntlets', 'Artifacts']:
     return DestinyArmor(api, data, character)
   else :
-    print last
     return DestinyItem(api, data, character)
 
 class DestinyItem(object):
