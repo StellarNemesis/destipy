@@ -3,6 +3,7 @@ import getpass
 import os
 import shutil
 import zipfile
+import json
 
 import bungo_db
 import bungie_login
@@ -151,10 +152,10 @@ class Destiny(object):
       req = self._session.get(request_string)
     return req.json()
 
-  def _api_post(self, query, params={}):
+  def _api_post(self, query, data={}, body=''):
     '''Send a 'post' to the Destiny API.'''
     request_string = self.API_URL + query
-    req = self._session.post(request_string, params = params)
+    req = self._session.post(request_string, data=json.dumps(data))
     return req.json()
 
   def login(self, username=None, platform=None, password=None):
@@ -201,9 +202,12 @@ class Destiny(object):
     return None
 
   def equipItems(self, items, character):
+    if not hasattr(items, '__iter__'):
+      items = [items]
     params = {'characterId' : character.character_id,
         'membershipType' : character.character_info['characterBase']['membershipType'],
-        'itemId' : [i.itemId for i in items]}
+        'itemIds' : [i.itemId for i in items]}
+    print params
     return self._api_post('/EquipItems', params)
 
 
@@ -409,6 +413,10 @@ class DestinyCharacter(object):
     return [itemWrapper(self.api, i, self) for i in
             data['Response']['data']['items']]
 
+  @property
+  def equipedItems(self):
+    return [i for i in self.inventory if getattr(i, 'isEquipped', False)]
+
 def itemWrapper(api, data, character=None):
   '''Handle item data and construct the proper item child class.
   Optional character input is the owner/holder of the item.
@@ -459,7 +467,7 @@ class DestinyItem(object):
     acc = self.owner.account
     req = req % (acc.membership_type, acc.membership_id, own.character_id,
                  self.itemId)
-    return (self.api._api_request(req, cache=True))['Response']['data']
+    return (self.api._api_request(req))['Response']['data']
 
   @property
   def generic_details(self):
@@ -499,6 +507,10 @@ class DestinyEquipment(DestinyItem):
   @property
   def talentGrid(self):
     return self.api.db.talentGrid[self.generic_details['talentGridHash']].data
+
+  @property
+  def isEquipped(self):
+    return self.instance_details['item']['isEquipped']
 
 class DestinyWeapon(DestinyEquipment):
 
