@@ -424,13 +424,16 @@ def itemWrapper(api, data, character=None):
   itemType = api.db.inventoryBucket[data['bucketHash']].name
   last = (itemType.split(' '))[-1]
   if last == 'Weapons':
-    return DestinyWeapon(api, data, character)
+    out = DestinyWeapon(api, data, character)
   elif last == 'Subclass':
-    return DestinySubclass(api, data, character)
+    out = DestinySubclass(api, data, character)
   elif last in ['Armor', 'Ghost', 'Helmet', 'Gauntlets', 'Artifacts']:
-    return DestinyArmor(api, data, character)
+    out = DestinyArmor(api, data, character)
   else :
-    return DestinyItem(api, data, character)
+    out = DestinyItem(api, data, character)
+  if out.name == 'Encrypted Engram':
+    out = DestinyItem(api, data, character)
+  return out
 
 class DestinyItem(object):
   '''This should never be called directly; only through itemWrapper.'''
@@ -442,14 +445,11 @@ class DestinyItem(object):
     self.itemHash = data['itemHash']
     self.owner = character
     self.itemId = data['itemId']
+    self.name = api.db.inventoryItem[self.itemHash].name
 
   def __repr__(self):
     tmp = (self.name, self.itemType)
     return "<DestinyItem %s, %s>" % tmp
-
-  @property
-  def name(self):
-    return self.api.db.inventoryItem[self.itemHash].name
 
   @property
   def itemType(self):
@@ -506,7 +506,7 @@ class DestinyEquipment(DestinyItem):
 
   @property
   def talentGrid(self):
-    return self.api.db.talentGrid[self.generic_details['talentGridHash']].data
+    return talentGrid(self.api, self.api.db.talentGrid[self.generic_details['talentGridHash']].data)
 
   @property
   def isEquipped(self):
@@ -565,14 +565,26 @@ class ItemPerk(object):
   def __repr__(self):
     return "<ItemPerk %s>" % self.name
 
-class talentRow(object):
+class talentGrid(object):
   def __init__(self, api, data):
     self.api = api
     self.data = data
-    self.nodes = [talentNode(api, i) for i in data['steps']]
+    self.nodes = [talentNode(api, i) for i in data['nodes']]
 
 class talentNode(object):
   def __init__(self, api, data):
     self.api = api
     self.data = data
-    self.name = data['nodeStepName']
+    for i in ['nodeHash', 'steps', 'nodeHash', 'row', 'column']:
+      setattr(self, i, data[i])
+    if len(self.steps) == 1:
+      try:
+        self.name = self.steps[0]['nodeStepName']
+      except KeyError:
+        self.name = '???'
+    else:
+      self.name = 'random perk'
+    self.perks = [itemPerk(api, api.db.sandboxPerk[i]) for i in data.perkHashes]
+
+  def __repr__(self):
+    return '<TalentNode %s>' % self.name
