@@ -321,11 +321,18 @@ class DestinyAccount(object):
   def vault(self):
     req = '/%s/MyAccount/Vault/'
     req %= (self.membership_type)
-    out = self.api._api_request(req, params={'acountId' : self.membership_id})
-    return {self.api.db.inventoryBucket[i['bucketHash']]:
-      [itemWrapper(self.api, j, self.characters[0]) for j in  i['items']]
-      for i in out['Response']['data']['buckets']}
-# get 'bucketHash' for item from db
+    info = self.api._api_request(req, params={'acountId' : self.membership_id})
+    cha = self.characters[0]
+    out = {}
+    for b in info['Response']['data']['buckets']:
+      bucketHash = b['bucketHash']
+      key = self.api.db.inventoryBucket[bucketHash].name
+      items = []
+      for i in b['items']:
+        i['bucketHash'] = bucketHash
+        items.append(itemWrapper(self.api, i, cha))
+      out[key] = items
+    return out
 
 class DestinyCharacter(object):
   def __init__(self, account, character_info):
