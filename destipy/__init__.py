@@ -136,14 +136,14 @@ class Destiny(object):
 
     return db
 
-  def _api_request(self, query, cache=False):
+  def _api_request(self, query, params={}, cache=False):
     '''Send a 'get' request to the Destiny API. 'cache' saves response to memory.'''
     request_string = self.API_URL + query
     if cache:
       # check if we've loaded this before
       if self._cache.has_key(request_string):
         return self._cache[request_string]
-      req = self._session.get(request_string)
+      req = self._session.get(request_string, params=params)
       out = req.json()
       # save to memory
       self._cache[request_string] = out
@@ -207,9 +207,13 @@ class Destiny(object):
     params = {'characterId' : character.character_id,
         'membershipType' : character.character_info['characterBase']['membershipType'],
         'itemIds' : [i.itemId for i in items]}
-    print params
     return self._api_post('/EquipItems', params)
 
+  def transferItems(self, item, character):
+    params = {'characterId' : character.character_id,
+        'membershipType' : character.character_info['characterBase']['membershipType'],
+        'itemId' : item.itemId}
+    return self._api_post('/TransferItems', params)
 
   def DestinyAccount(self, membership_type, username):
     '''Return account info for a Destiny account.'''
@@ -312,6 +316,16 @@ class DestinyAccount(object):
   @property
   def clan_tag(self):
     return self.account_info['clanTag']
+
+  @property
+  def vault(self):
+    req = '/%s/MyAccount/Vault/'
+    req %= (self.membership_type)
+    out = self.api._api_request(req, params={'acountId' : self.membership_id})
+    return {self.api.db.inventoryBucket[i['bucketHash']]:
+      [itemWrapper(self.api, j, self.characters[0]) for j in  i['items']]
+      for i in out['Response']['data']['buckets']}
+# get 'bucketHash' for item from db
 
 class DestinyCharacter(object):
   def __init__(self, account, character_info):
@@ -421,7 +435,11 @@ def itemWrapper(api, data, character=None):
   '''Handle item data and construct the proper item child class.
   Optional character input is the owner/holder of the item.
   This function should be the only method used to construct items.'''
-  itemType = api.db.inventoryBucket[data['bucketHash']].name
+  try :
+    itemType = api.db.inventoryBucket[data['bucketHash']].name
+  except KeyError:
+    itemType = api.db.inventoryItem[data['itemHash']].data
+    itemType = api.db.inventoryBucket[itemType['bucketTypeHash']].name
   last = (itemType.split(' '))[-1]
   if last == 'Weapons':
     out = DestinyWeapon(api, data, character)
@@ -444,7 +462,10 @@ class DestinyItem(object):
     self.data = data
     self.itemHash = data['itemHash']
     self.owner = character
-    self.itemId = data['itemId']
+    try:
+      self.itemId = data['itemId']
+    except KeyError:
+       self.itemId = data['itemInstanceId']
     self.name = api.db.inventoryItem[self.itemHash].name
 
   def __repr__(self):
@@ -509,6 +530,19 @@ class DestinyEquipment(DestinyItem):
     return talentGrid(self.api, self.api.db.talentGrid[self.generic_details['talentGridHash']].data)
 
   @property
+  def activeNodes(self):
+    node_info = self.instance_details['item']['nodes']
+    nodes = self.talentGrid.nodes
+    out = []
+    for i in node_info:
+      if i['isActivated']:
+        node = nodes[i['nodeHash']]
+        node._setStep(i['stepIndex'])
+        if node.name :
+          out.append(node)
+    return out
+
+  @property
   def isEquipped(self):
     return self.instance_details['item']['isEquipped']
 
@@ -547,7 +581,7 @@ class DestinySubclass(DestinyEquipment):
     tmp = self.api.db.inventoryItem[self.itemHash]['itemTypeName']
     return tmp.split(' ')[0]
 
-class ItemPerk(object):
+class itemPerk(object):
 
   def __init__(self, api, data):
     self.api = api
@@ -572,19 +606,25 @@ class talentGrid(object):
     self.nodes = [talentNode(api, i) for i in data['nodes']]
 
 class talentNode(object):
-  def __init__(self, api, data):
+  def __init__(self, api, data, step=None):
     self.api = api
     self.data = data
     for i in ['nodeHash', 'steps', 'nodeHash', 'row', 'column']:
       setattr(self, i, data[i])
     if len(self.steps) == 1:
-      try:
-        self.name = self.steps[0]['nodeStepName']
-      except KeyError:
-        self.name = '???'
+      self._setStep(0)
     else:
       self.name = 'random perk'
-    self.perks = [itemPerk(api, api.db.sandboxPerk[i]) for i in data.perkHashes]
+      self.perks = []
+
+  def _setStep(self, step):
+    try:
+      self.name = self.steps[step]['nodeStepName']
+    except KeyError:
+      self.name = ''
+    self.step = self.steps[step]
+    self.perks = [itemPerk(self.api, self.api.db.sandboxPerk[i]) for i in
+                  self.step['perkHashes']]
 
   def __repr__(self):
     return '<TalentNode %s>' % self.name
