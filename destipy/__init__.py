@@ -215,7 +215,7 @@ class Destiny(object):
         'itemIds' : [i.itemId for i in items]}
     return self._api_post('/EquipItems', params)
 
-  def transferItems(self, item, character):
+  def transferItem(self, item, character):
     params = {'characterId' : character.character_id,
         'membershipType' : character.character_info['characterBase']['membershipType'],
         'itemId' : item.itemId}
