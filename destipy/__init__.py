@@ -25,6 +25,7 @@ class Destiny(object):
     '''Intialize the Destiny API backend.'''
     self.API_URL = 'https://www.bungie.net/Platform/Destiny'
     self._cache = CachedData()
+    self._tested_key = None
 
     # if api key is not supplied then get one
     if not api_key:
@@ -39,9 +40,10 @@ class Destiny(object):
               api_key = line
             # once we have a valid key, stop searching
             if self._test_api_key(api_key) :
+              self._tested_key = api_key
               break
       # if we don't have a valid key, then ask user for one
-      if not self._test_api_key(api_key) :
+      if not  self._test_api_key(api_key) :
         print('Unable to obtain valid API key from "%s".' % fn)
         print('Please enter your API key.')
         api_key = raw_input("API Key: ")
@@ -64,6 +66,7 @@ class Destiny(object):
             f.write(api_key)
 
     self._API_KEY = api_key
+    self._tested_key = api_key
     # all api requests are handled trough this session
     self._session = requests.Session()
     self._session.headers['X-API-Key'] = api_key
@@ -81,11 +84,14 @@ class Destiny(object):
         api_key = self._API_KEY
       except AttributeError:
         return False
+    if api_key == self._tested_key:
+      return True
     req_url = self.API_URL + '/Manifest'
     req = requests.get(req_url, headers={'X-API-Key' : api_key})
     if not req.status_code == 200:
       return False
-    return req.json()['ErrorCode'] == 1
+    out = req.json()['ErrorCode'] == 1
+    return out
 
   def _grab_bungo_db(self, del_old=True):
     '''Load Bungie's SQL manifest if we have an up to date one.
